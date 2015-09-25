@@ -613,12 +613,6 @@ void SetupDynamisMob(CMobEntity* PMob)
 {
     JOBTYPE mJob = PMob->GetMJob();
 
-    if(mJob == JOB_BST)
-    {
-        // bsts are spawned with pets
-        PMob->setMobMod(MOBMOD_SPECIAL_SKILL, 0);
-    }
-
     // no gil drop and no mugging!
     PMob->setMobMod(MOBMOD_GIL_MAX, -1);
     PMob->setMobMod(MOBMOD_MUG_GIL, -1);

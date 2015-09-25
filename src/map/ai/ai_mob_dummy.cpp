@@ -723,10 +723,11 @@ void CAIMobDummy::ActionAbilityStart()
 
     // lets try to use my two hour
     // two hour is assumed to be at the front
-    if (m_PMob->getMobMod(MOBMOD_MAIN_2HOUR) > 0)
+    if (m_PMob->getMobMod(MOBMOD_MAIN_2HOUR) > 0 || m_PMob->PMaster == nullptr)
     {
         // get my job two hour
-        SetCurrentMobSkill(battleutils::GetTwoHourMobSkill(m_PMob->GetMJob(), m_PMob->m_Family));
+        // SetCurrentMobSkill(battleutils::GetTwoHourMobSkill(m_PMob->GetMJob(), m_PMob->m_Family));
+        SetCurrentMobSkill(battleutils::GetMobSkill(2000));
 
         if (m_PMobSkill != nullptr)
         {

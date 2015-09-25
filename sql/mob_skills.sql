@@ -812,7 +812,7 @@ INSERT INTO `mob_skills` VALUES (763,720,'Eagle_Eye_Shot',0,25.0,2000,1500,4,0,0
 INSERT INTO `mob_skills` VALUES (764,721,'Meikyo_Shisui',0,7.0,2000,1500,1,0,0,0);
 INSERT INTO `mob_skills` VALUES (765,722,'Mijin_Gakure',1,20.0,2000,1500,4,0,0,0);
 INSERT INTO `mob_skills` VALUES (766,723,'Call_Wyvern',0,7.0,2000,1500,1,0,0,0);
-INSERT INTO `mob_skills` VALUES (767,724,'Astral_Flow',0,7.0,2000,1500,1,0,0,0);
+INSERT INTO `mob_skills` VALUES (767,724,'Astral_Flow_Pet',0,7.0,2000,1500,1,0,0,0);
 -- INSERT INTO `mob_skills` VALUES (768,725,'Warp_Out',0,7.0,2000,1500,4,0,0,0);
 -- INSERT INTO `mob_skills` VALUES (769,726,'Warp_In',0,7.0,2000,1500,4,0,0,0);
 -- INSERT INTO `mob_skills` VALUES (770,727,'Arbor_Storm',0,7.0,2000,1500,4,0,0,0);
@@ -2045,7 +2045,7 @@ INSERT INTO `mob_skills` VALUES (1993,432,'Blood_Weapon',0,18.0,2000,0,1,0,30,0)
 -- INSERT INTO `mob_skills` VALUES (1997,1997,'Meikyo_Shisui',0,7.0,2000,1500,4,0,0,0);
 -- INSERT INTO `mob_skills` VALUES (1998,1998,'Mijin_Gakure',0,7.0,2000,1500,4,0,0,0);
 -- INSERT INTO `mob_skills` VALUES (1999,1999,'Spirit_Surge',0,7.0,2000,1500,4,0,0,0);
--- INSERT INTO `mob_skills` VALUES (2000,2000,'Astral_Flow',0,7.0,2000,1500,4,0,0,0);
+INSERT INTO `mob_skills` VALUES (2000,432,'Astral_Flow_Pet',0,7.0,2000,0,1,2,0,0);
 -- INSERT INTO `mob_skills` VALUES (2001,2001,'Azure_Lore',0,7.0,2000,1500,4,0,0,0);
 -- INSERT INTO `mob_skills` VALUES (2002,2002,'Wild_Card',0,7.0,2000,1500,4,0,0,0);
 -- INSERT INTO `mob_skills` VALUES (2003,2003,'Overdrive',0,7.0,2000,1500,4,0,0,0);

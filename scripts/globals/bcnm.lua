@@ -25,10 +25,10 @@ itemid_bcnmid_map = {6, {0, 0}, -- Bearclaw_Pinnacle
                    139, {1177, 4, 1552, 10, 1553, 11, 1131, 12, 1175, 15, 1180, 17}, -- Horlais Peak
                    140, {1551, 34, 1552, 35, 1552, 36}, -- Ghelsba Outpost
                    144, {1166, 68, 1178, 81, 1553, 76, 1180, 82, 1130, 79, 1552, 73}, -- Waughroon Shrine
-                   146, {1553, 107, 1551, 105, 1177, 100}, -- Balgas Dias
+                   146, {1553, 107, 1551, 105,  1177, 109, 1177, 100}, -- Balgas Dias
                    163, {1130, 129}, -- Sacrificial Chamber
-                   168, {0, 0}, -- Chamber of Oracles
-                   170, {0, 0}, -- Full Moon Fountain
+                   168, {1130, 193, 0, 0}, -- Chamber of Oracles
+                   170, {0, 225}, -- Full Moon Fountain
                    180, {1550, 293}, -- LaLoff Amphitheater
                    181, {0, 0}, -- The Celestial Nexus
                    201, {1546, 418, 1174, 417}, -- Cloister of Gales
@@ -60,11 +60,11 @@ bcnmid_param_map = {6, {640, 0},
                   139, {0, 0, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 10, 10, 11, 11, 12, 12, 15, 15, 17, 17},
                   140, {32, 0, 33, 1, 34, 2, 35, 3, 36, 4},
                   144, {65, 1, 73, 9, 64, 0, 67, 3, 68, 4, 70, 6, 71, 7, 72, 8, 81, 17, 76, 12, 82, 18, 79, 15},
-                  146, {99, 3, 96, 0, 101, 5, 102, 6, 103, 7, 107, 11, 105, 9},
+                  146, {99, 3, 96, 0, 101, 5, 102, 6, 103, 7, 107, 11, 105, 9,  109, 13, 100, 4,},
                   163, {128, 0, 129, 1},
                   165, {160, 0, 161, 1},
-                  168, {192, 0, 194, 2, 195, 3, 196, 4},
-                  170, {224, 0, 225, 1},
+                  168, {192, 0, 194, 2, 195, 3, 196, 4, 193, 1},
+                  170, {225, 0, 224, 0},
                   179, {256, 0},
                   180, {293, 5, 288, 0, 289, 1, 290, 2, 291, 3, 292, 4},
                   181, {320, 0},
@@ -83,7 +83,7 @@ function TradeBCNM(player, zone, trade, npc)
         player:messageBasic(94, 0, 0);
         return false;
     elseif (player:hasWornItem(trade:getItem())) then -- If already used orb or testimony
-        player:messageBasic(56, 0, 0); -- i need correct dialog
+        player:messageBasic(062, 0, 0); -- i need correct dialog
         return false;
     end
 
@@ -93,6 +93,7 @@ function TradeBCNM(player, zone, trade, npc)
     -- the following is for orb battles, etc
 
     local id = ItemToBCNMID(player, zone, trade);
+	print("ID = "..id);
 
     if (id == -1) then -- no valid BCNMs with this item
         -- todo: display message based on zone text offset
@@ -100,10 +101,17 @@ function TradeBCNM(player, zone, trade, npc)
         player:setVar("trade_itemid", 0);
         return false;
     else -- a valid BCNM with this item, start it.
+		
         mask = GetBattleBitmask(id, zone, 1);
+		-- mask = GetBattleBitmask(105, 146, 1);
+		
+
+		
 
         if (mask == -1) then -- Cannot resolve this BCNMID to an event number, edit bcnmid_param_map!
-            print("Item is for a valid BCNM but cannot find the event parameter to display to client.");
+           -- print("Item is for a valid BCNM but cannot find the event parameter to display to client.");
+			print("Cannot resolve this BCNMID to an event number, edit bcnmid_param_map!");
+			print("mask = "..mask);
             player:setVar("trade_bcnmid", 0);
             player:setVar("trade_itemid", 0);
             return false;
@@ -121,6 +129,7 @@ end;
 function EventTriggerBCNM(player, npc)
     player:setVar("trade_bcnmid", 0);
     player:setVar("trade_itemid", 0);
+	print("got to the event");
 
     if (player:hasStatusEffect(EFFECT_BATTLEFIELD)) then
         if (player:isInBcnm() == 1) then
@@ -129,13 +138,17 @@ function EventTriggerBCNM(player, npc)
             status = player:getStatusEffect(EFFECT_BATTLEFIELD);
             playerbcnmid = status:getPower();
             playermask = GetBattleBitmask(playerbcnmid, player:getZoneID(), 1);
+			
             if (playermask~=-1) then
+			
                 -- This gives players who did not trade to go in the option of entering the fight
                 player:startEvent(0x7d00, 0, 0, 0, playermask, 0, 0, 0, 0);
             else
                 player:messageBasic(94, 0, 0);
             end
+			print("player mask"..playermask);
         end
+		print("player mask"..playermask);
         return true;
     else
         if (checkNonTradeBCNM(player, npc)) then
@@ -150,6 +163,7 @@ function EventUpdateBCNM(player, csid, option, entrance)
     -- return false;
     local id = player:getVar("trade_bcnmid"); -- this is 0 if the bcnm isnt handled by new functions
     local skip = CutsceneSkip(player, npc);
+	
 
     print("UPDATE csid "..csid.." option "..option);
     -- seen: option 2, 3, 0 in that order

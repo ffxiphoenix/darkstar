@@ -75,7 +75,6 @@ CAIMobDummy::CAIMobDummy(CMobEntity* PMob)
     m_LastStandbackTime = 0;
     m_DeaggroTime = 0;
     m_NeutralTime = 0;
-    m_CanStandback = false;
     m_drawnIn = false;
     m_mobskillattack = false;
     m_actionqueueability = false;
@@ -225,9 +224,14 @@ void CAIMobDummy::ActionRoaming()
             // do not check for despawning because i'm at home
             m_checkDespawn = false;
 
-            if (m_PMob->getMobMod(MOBMOD_SPECIAL_SKILL) != 0 && TrySpecialSkill())
+            if (m_PMob->getMobMod(MOBMOD_SPECIAL_SKILL) != 0 && m_Tick >= m_LastSpecialTime + m_PMob->getBigMobMod(MOBMOD_SPECIAL_COOL) && TrySpecialSkill())
             {
                 // I spawned a pet
+            }
+            else if (m_PMob->GetMJob() == JOB_SMN && CanCastSpells() && m_PMob->SpellContainer->HasBuffSpells() && m_Tick >= m_LastMagicTime + m_PMob->getBigMobMod(MOBMOD_MAGIC_COOL))
+            {
+                // summon pet
+                CastSpell(m_PMob->SpellContainer->GetBuffSpell());
             }
             else if (CanCastSpells() && dsprand::GetRandomNumber(10) < 3 && m_PMob->SpellContainer->HasBuffSpells())
             {
@@ -609,9 +613,14 @@ void CAIMobDummy::ActionSpawn()
     {
         m_NeutralTime = m_Tick;
         m_PMob->m_neutral = true;
-        m_LastActionTime = m_Tick + dsprand::GetRandomNumber(2000,10000);
+
+        // Force mob to roam / cast spell right on spawn
+        m_LastActionTime = 0;
+        m_LastSpecialTime = 0;
+        m_LastMagicTime = 0;
+        m_LastMobSkillTime = 0;
         m_SpawnTime = m_Tick;
-        m_LastMobSkillTime = m_Tick;
+
         m_firstSpell = true;
         m_ActionType = ACTION_ROAMING;
         m_PBattleTarget = nullptr;
@@ -686,12 +695,6 @@ void CAIMobDummy::ActionSpawn()
             }
         }
 
-        // used for dynamis stat-spawned mobs
-        if (m_PMob->loc.zone->GetType() == ZONETYPE_DYNAMIS)
-        {
-            m_PMob->m_StatPoppedMobs = false;
-        }
-        
         luautils::OnMobSpawn( m_PMob );
     }
 }
@@ -1255,7 +1258,26 @@ void CAIMobDummy::ActionMagicCasting()
 void CAIMobDummy::ActionMagicFinish()
 {
     m_LastActionTime = m_Tick;
-    m_LastMagicTime = m_Tick - dsprand::GetRandomNumber(m_PMob->getBigMobMod(MOBMOD_MAGIC_COOL) / 2);
+
+    int32 standbackCool = m_PMob->getBigMobMod(MOBMOD_STANDBACK_COOL);
+    CBattleEntity* PBattleTarget = m_PBattleSubTarget;
+
+    // Use current battle target if mob was casting on itself
+    if (PBattleTarget == m_PMob && m_PBattleTarget != nullptr)
+    {
+        PBattleTarget = m_PBattleTarget;
+    }
+
+    if (standbackCool != 0 && distance(m_PMob->loc.p, PBattleTarget->loc.p) > m_PMob->m_ModelSize)
+    {
+        // magic casting cooldown is usually reduced for some mobs (blm) when casting from a distance
+        m_LastMagicTime = m_Tick - m_PMob->getBigMobMod(MOBMOD_MAGIC_COOL) + standbackCool - dsprand::GetRandomNumber(standbackCool / 4);
+    }
+    else
+    {
+        m_LastMagicTime = m_Tick - dsprand::GetRandomNumber(m_PMob->getBigMobMod(MOBMOD_MAGIC_COOL) / 1.75f);
+    }
+
     m_DeaggroTime = m_Tick;
 
     m_PMagicState->FinishSpell();
@@ -1450,56 +1472,10 @@ void CAIMobDummy::ActionAttack()
             {
                 SetCurrentMobSkill(teleportBegin);
                 m_PBattleSubTarget = m_PMob;
-                m_LastStandbackTime = m_Tick;
                 m_ActionType = ACTION_MOBABILITY_FINISH;
                 ActionAbilityFinish();
                 m_LastSpecialTime = m_Tick;
             }
-        }
-    }
-    // try to standback if I can
-
-    if (m_PMob->getBigMobMod(MOBMOD_STANDBACK_TIME) && m_PMob->getMobMod(MOBMOD_TELEPORT_TYPE) != 2)
-    {
-        if (currentDistance > 28)
-        {
-            // you're so far away i'm going to standback when I get closer
-            m_CanStandback = true;
-        }
-        else if (m_PMob->getMobMod(MOBMOD_SPECIAL_SKILL) == 0 && !CanCastSpells() || m_PMob->GetHPP() <= 65)
-        {
-            // can't standback anymore cause I don't have any ranged moves
-            m_CanStandback = false;
-
-            // don't stand back again
-            m_LastStandbackTime = m_Tick + m_PMob->getBigMobMod(MOBMOD_STANDBACK_TIME);
-        }
-        else if (currentDistance < 20 && currentDistance > m_PMob->m_ModelSize * 2)
-        {
-
-            if (m_CanStandback && currentDistance > m_PMob->m_ModelSize)
-            {
-                uint16 halfStandback = (float)m_PMob->getBigMobMod(MOBMOD_STANDBACK_TIME)/3;
-                m_LastStandbackTime = m_Tick + m_PMob->getBigMobMod(MOBMOD_STANDBACK_TIME) - dsprand::GetRandomNumber(halfStandback);
-                m_CanStandback = false;
-            }
-
-            if (m_Tick >= m_LastStandbackTime + m_PMob->getBigMobMod(MOBMOD_STANDBACK_TIME))
-            {
-                // speed up my ranged attacks cause i'm waiting here
-                if (m_LastSpecialTime > 1000 && m_LastMagicTime > 500)
-                {
-                    m_LastSpecialTime -= 1000;
-                    m_LastMagicTime -= 500;
-                }
-                FinishAttack();
-            }
-
-        }
-        else
-        {
-            // if i'm chasing too much, just melee attack
-            m_LastStandbackTime -= 1000;
         }
     }
 
@@ -1533,6 +1509,7 @@ void CAIMobDummy::ActionAttack()
                 continue;
             }
             float currentDistance = distance(m_PMob->loc.p, m_PBattleSubTarget->loc.p);
+
             if (currentDistance <= m_PMobSkill->getDistance())
             {
                 int16 WeaponDelay = m_PMob->GetWeaponDelay(true);
@@ -1590,6 +1567,7 @@ void CAIMobDummy::ActionAttack()
                 }
             }
             else if (!(m_PMob->m_Behaviour & BEHAVIOUR_STANDBACK && currentDistance < 20) &&
+                    !(m_PMob->m_Behaviour & BEHAVIOUR_HP_STANDBACK && currentDistance < 20 && m_PMob->GetHPP() > 70) &&
                 !(m_PMob->getMobMod(MOBMOD_SPAWN_LEASH) > 0 && distance(m_PMob->loc.p, m_PMob->m_SpawnPoint) > m_PMob->getMobMod(MOBMOD_SPAWN_LEASH)))
             {
 
@@ -2049,9 +2027,13 @@ bool CAIMobDummy::CanCastSpells()
     }
 
     // smn can only cast spells if it has an existing pet
-    if (m_PMob->GetMJob() == JOB_SMN && m_PMob->PPet == nullptr)
+    if (m_PMob->GetMJob() == JOB_SMN)
     {
-        return false;
+        if(m_PMob->PPet == nullptr ||
+                !m_PMob->PPet->isDead())
+        {
+            return false;
+        }
     }
 
     return true;
@@ -2140,15 +2122,6 @@ bool CAIMobDummy::TryCastSpell()
 
     int chosenSpellId = -1;
 
-    // only cast first spell if target is out of range
-    if (m_firstSpell && m_PBattleTarget != nullptr && distance(m_PMob->loc.p, m_PBattleTarget->loc.p) <= m_PMob->m_ModelSize)
-    {
-
-        m_firstSpell = false;
-        m_LastMagicTime = m_Tick - m_PMob->getBigMobMod(MOBMOD_MAGIC_COOL) + dsprand::GetRandomNumber(3000,8000);
-        return false;
-    }
-
     if (m_PMob->m_HasSpellScript)
     {
         // skip logic and follow script
@@ -2209,12 +2182,17 @@ void CAIMobDummy::ActionSpecialSkill()
     m_LastActionTime = m_Tick;
     m_DeaggroTime = m_Tick;
 
-    uint32 halfSpecial = (float)m_PMob->getBigMobMod(MOBMOD_SPECIAL_COOL)/4;
 
-    m_LastSpecialTime = m_Tick - dsprand::GetRandomNumber(halfSpecial);
-
-    // don't use magic right after
-    m_LastMagicTime = m_Tick + m_PMob->getBigMobMod(MOBMOD_MAGIC_COOL) + dsprand::GetRandomNumber(5000) + 4000;
+    int32 standbackCool = m_PMob->getBigMobMod(MOBMOD_STANDBACK_COOL);
+    if (standbackCool != 0 && distance(m_PMob->loc.p, m_PBattleSubTarget->loc.p) > m_PMob->m_ModelSize)
+    {
+        // reduce special cool down when using skill outside of attack range (rng mobs)
+        m_LastSpecialTime = m_Tick - m_PMob->getBigMobMod(MOBMOD_SPECIAL_COOL) + standbackCool;
+    }
+    else
+    {
+        m_LastSpecialTime = m_Tick;
+    }
 
     m_PBattleSubTarget->StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_DETECTABLE);
     apAction_t Action;
@@ -2432,14 +2410,7 @@ void CAIMobDummy::SetupEngage()
     m_DeaggroTime = m_Tick;
     m_LastActionTime = m_Tick - 1000; // Why do we subtract 1 sec?
     m_firstSpell = true;
-    m_CanStandback = true;
     m_PPathFind->Clear();
-
-    // don't use offensive special skill right away
-    if (m_PMob->getMobMod(MOBMOD_SPECIAL_SKILL) != 0 && m_PMob->GetMJob() != JOB_BST && m_PMob->GetMJob() != JOB_PUP)
-    {
-        m_LastSpecialTime = m_Tick - dsprand::GetRandomNumber((int16)m_PMob->getBigMobMod(MOBMOD_SPECIAL_COOL) / 2) + 1000;
-    }
 
     if (m_PMob->m_roamFlags & ROAMFLAG_WORM)
     {

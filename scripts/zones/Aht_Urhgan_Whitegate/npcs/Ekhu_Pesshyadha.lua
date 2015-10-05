@@ -27,7 +27,11 @@ end;
 function onTrigger(player,npc)
 
 	local gotItAllProg = player:getVar("gotitallCS");
-    if (gotItAllProg == 1) then
+    local artsandcrafts = player:getQuestStatus(AHT_URHGAN,ARTS_AND_CRAFTS);
+    local A = player:getVar("artsA");
+    if artsandcrafts == QUEST_ACCEPTED and A  ~= 1 then
+    	player:startEvent(0x0201);    
+    elseif (gotItAllProg == 1) then
 	   player:startEvent(0x0219);
 	elseif (gotItAllProg == 2) then
 	   player:startEvent(0x0218);
@@ -62,6 +66,9 @@ function onEventFinish(player,csid,option)
 	   player:addKeyItem(VIAL_OF_LUMINOUS_WATER);
 	   player:messageSpecial(KEYITEM_OBTAINED,VIAL_OF_LUMINOUS_WATER);
 	   player:setVar("gotitallCS",4);
-	end
+    elseif (csid == 0x0201) then 
+    player:setVar("artsA",1); 
+end 
+
 end;
 

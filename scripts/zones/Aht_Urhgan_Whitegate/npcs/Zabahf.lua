@@ -24,7 +24,11 @@ end;
 
 function onTrigger(player,npc)
 	local gotItAllProg = player:getVar("gotitallCS");
-    if (gotItAllProg == 1 or gotItAllProg == 3) then
+    local artsandcrafts = player:getQuestStatus(AHT_URHGAN,ARTS_AND_CRAFTS);
+    local T = player:getVar("artsT");
+    if artsandcrafts == QUEST_ACCEPTED and T  ~= 1 then
+    	player:startEvent(0x0200);  
+    elseif (gotItAllProg == 1 or gotItAllProg == 3) then
 	   player:startEvent(0x0215);
 	elseif (gotItAllProg == 2) then   
 	   player:startEvent(0x020b);
@@ -57,6 +61,8 @@ function onEventFinish(player,csid,option)
 	-- printf("RESULT: %u",option);
 	if (csid == 0x020b) then
 	   player:setVar("gotitallCS",3);
+    elseif (csid == 0x0200) then 
+    player:setVar("artsT",1);
 	end
 end;
 

@@ -27,7 +27,15 @@ function onTrigger(player,npc)
 	local TOAUM3_DAY = player:getVar("TOAUM3_STARTDAY");
 	local realday = tonumber(os.date("%j")); -- %M for next minute, %j for next day
 	local needToZone = player:needToZone();
-	
+    local body = player:getEquipID(SLOT_BODY);
+    local nicebod = 0;
+    local bodcount = 0;
+    curbod = {12548, 13742, 13743, 14525, 13795, 13802, 14416, 13779, 13754, 14436, 14438, 13775, 13776, 13740, 13741, 13703, 13710, 14372, 14440, 14441, 12573, 14391, 14389, 14390, 14380};
+	for i= 1, 25 do
+    if curbod[i] == body then 
+        nicebod=1;
+    end
+    end
 	if (player:getCurrentMission(TOAU) == IMMORTAL_SENTRIES) then
 	 	if (player:getVar("TOAUM2") == 1 or player:getVar("TOAUM2") == 2) then
 	 		player:startEvent(0x0BBA,0,0,0,0,0,0,0,0,0);
@@ -113,7 +121,8 @@ function onEventFinish(player,csid,option)
         elseif (csid == 0x0c00) then
             player:completeMission(TOAU,THE_DOLPHIN_CREST);
             player:addMission(TOAU,THE_BLACK_COFFIN);
-        elseif (csid == 0x0c02) then
+        elseif (csid == 0x0c02 and nicebod == 1) then
+            player:setVar("dresswell",1);
             player:completeMission(TOAU,GHOSTS_OF_THE_PAST);
             player:addMission(TOAU,GUESTS_OF_THE_EMPIRE);
 	end

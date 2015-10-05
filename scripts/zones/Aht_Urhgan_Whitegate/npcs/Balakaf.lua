@@ -21,7 +21,13 @@ end;
 -----------------------------------
 
 function onTrigger(player,npc)
-	player:startEvent(0x0203);
+    local artsandcrafts = player:getQuestStatus(AHT_URHGAN,ARTS_AND_CRAFTS);
+    local D = player:getVar("artsD");
+    if artsandcrafts == QUEST_ACCEPTED and D  ~= 1 then
+    	player:startEvent(0x0203); 
+    else
+        player:messageSpecial( MUSHAYRA_DIALOG );
+end        
 end;
 
 -----------------------------------
@@ -40,5 +46,8 @@ end;
 function onEventFinish(player,csid,option)
 	-- printf("CSID: %u",csid);
 	-- printf("RESULT: %u",option);
+    if (csid == 0x0203) then 
+    player:setVar("artsD",1);
+end    
 end;
 

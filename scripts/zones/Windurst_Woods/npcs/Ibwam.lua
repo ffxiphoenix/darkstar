@@ -69,7 +69,7 @@ function onTrigger(player,npc)
 			player:startEvent(0x02e0);
 		else
 			if (WildcatWindurst == 0) then
-				player:startEvent(0x02e1);
+				player:startEvent(0x02e3);
 			elseif (player:isMaskFull(WildcatWindurst,20) == true) then
 				player:startEvent(0x02e3);
 			else
@@ -99,6 +99,7 @@ end;
 function onEventFinish(player,csid,option)
 --printf("CSID: %u",csid);
 --printf("RESULT: %u",option);
+
 	if (csid == 0x02e0) then
 		player:addQuest(WINDURST,LURE_OF_THE_WILDCAT_WINDURST);
 		player:setVar("WildcatWindurst",0);

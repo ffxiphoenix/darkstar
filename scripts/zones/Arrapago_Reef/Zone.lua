@@ -66,9 +66,9 @@ function onEventFinish(player,csid,option)
     -- printf("RESULT: %u",option);
 if (csid == 0x0008) then
 player:setVar("TOAUM15",1);
-player:delKeyItem(EPHRAMADIAN_GOLD_COIN);
 player:startEvent(0x0022,1,1,1,1,1,1,1,1);
 elseif (csid == 0x0022 and player:getVar("TOAUM15") == 1) then
 player:startEvent(0x0023);
-end    
+end   
+if (csid == 0x0008) then
 end;

@@ -21,7 +21,13 @@ end;
 -----------------------------------
 
 function onTrigger(player,npc)
+    local artsandcrafts = player:getQuestStatus(AHT_URHGAN,ARTS_AND_CRAFTS);
+    local M = player:getVar("artsM");
+    if artsandcrafts == QUEST_ACCEPTED and M  ~= 1 then
+    	player:startEvent(0x01fe); 
+    else
 	player:startEvent(0x021e);
+    end
 end;
 
 -----------------------------------
@@ -40,5 +46,8 @@ end;
 function onEventFinish(player,csid,option)
 	-- printf("CSID: %u",csid);
 	-- printf("RESULT: %u",option);
+            if (csid == 0x01fe) then 
+    player:setVar("artsM",1);
+end   
 end;
 

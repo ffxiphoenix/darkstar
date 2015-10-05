@@ -25,7 +25,11 @@ end;
 
 function onTrigger(player,npc)
 	local vanishProg = player:getVar("vanishingactCS");	
-	if (player:getVar("deliveringTheGoodsCS") == 1) then
+    local artsandcrafts = player:getQuestStatus(AHT_URHGAN,ARTS_AND_CRAFTS);
+    local A1 = player:getVar("artsA1");
+    if artsandcrafts == QUEST_ACCEPTED and A1  ~= 1 then
+    	player:startEvent(0x0202);     
+	elseif (player:getVar("deliveringTheGoodsCS") == 1) then
 	   player:startEvent(0x0028);
 	elseif (player:getQuestStatus(AHT_URHGAN,DELIVERING_THE_GOODS) == QUEST_COMPLETED and vanishProg == 1) then
 	   player:startEvent(0x002a);
@@ -54,7 +58,9 @@ end;
 function onEventFinish(player,csid,option)
 	-- printf("CSID: %u",csid);
 	-- printf("RESULT: %u",option);
-	if (csid == (0x028)) then
+    if (csid == 0x0202) then 
+    player:setVar("artsA1",1);
+	elseif (csid == (0x028)) then
 	   player:setVar("deliveringTheGoodsCS",2);
 	elseif (csid == 0x002a and option == 0) then
 		player:addQuest(AHT_URHGAN,VANISHING_ACT);
